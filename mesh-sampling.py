@@ -23,10 +23,11 @@ def triangle_surface_area(triangle):
 
 
 
+reflection = numpy.array([[0., -1.], [-1., 0.]])
 def triangle_picking(triangle):
 	X = numpy.random.random(2)
-	while numpy.sum(X) > 1:
-		X = numpy.random.random(2)
+	if numpy.sum(X) > 1:
+		X = numpy.dot(X, reflection) + 1.
 
 	A, B, C = triangle
 	U, V = B - A, C - A
