@@ -22,16 +22,16 @@ def mesh_area(triangle_list):
 
 reflection = numpy.array([[0., -1.], [-1., 0.]])
 
-def triangle_picking(triangle):
-	# Pick uniformly a value in the [0, 1]x[0, 1] lower triangle
-	X = numpy.random.random(2)
-	if numpy.sum(X) > 1:
-		X = numpy.dot(X, reflection) + 1.
+def triangle_point_picking(triangle_list):
+	# Compute uniform distribution over [0, 1]x[0, 1] lower triangle
+	X = numpy.random.random((triangle_list.shape[0], 2))
+	t = numpy.sum(X, axis = 1) > 1
+	X[t] = numpy.dot(X[t], reflection) + 1.
 
-	# Map the [0, 1]x[0, 1] lower triangle to the actual triangle
-	A, B, C = triangle
-	U, V = B - A, C - A
-	return numpy.dot(numpy.array([U, V]).T, X) + A
+	# Map the [0, 1]x[0, 1] lower triangle to the actual triangles
+	ret = numpy.einsum('ijk,ij->ik', triangle_list[:,1:] - triangle_list[:,0,None], X) 
+	ret += triangle_list[:,0]
+	return ret
 
 
 
@@ -39,17 +39,14 @@ def uniform_sample_mesh(triangle_list, triangle_area_list, sample_count):
 	# Normalize the sum of area of each triangle to 1
 	triangle_area = triangle_area_list / numpy.sum(triangle_area_list)
 
-	# For each sample
-	ret = numpy.zeros((sample_count, 3))
-	for i in range(sample_count):
-		# Pick a triangle, with probability proportional to its surface area
-		j = numpy.random.choice(triangle_list.shape[0], p = triangle_area)
+	'''
+	For each sample
+	  * Pick a triangle with probability proportial to its surface area
+	  * pick a point on that triangle with uniform probability
+	'''
 
-		# Pick a point with uniform probability on the triangle
-		ret[i] = triangle_picking(triangle_list[j])
-
-	# Job done
-	return ret
+	triangle_id_list = numpy.random.choice(triangle_list.shape[0], size = sample_count, p = triangle_area)
+	return triangle_point_picking(triangle_list[triangle_id_list])
 
 
 
