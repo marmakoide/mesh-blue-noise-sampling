@@ -1,5 +1,6 @@
 import sys
 import numpy
+import argparse
 
 from scipy.spatial.distance import pdist, squareform
 from scipy.spatial import KDTree
@@ -91,6 +92,11 @@ def blue_noise_sample_elimination(point_list, mesh_surface_area, sample_count):
 
 
 def main():
+	# Command line parsing
+	parser = argparse.ArgumentParser(description = 'Compute and show a blue noise sampling of a triangul mesh')
+	parser.add_argument('-n', '--sample-count', type = int, default = 2048, help = 'number of sample to compute')
+	args = parser.parse_args()
+
 	# Load the input mesh as a list of triplets (ie. triangles) of 3d vertices
 	try:
 		triangle_list = numpy.array([X for X, N in stlparser.load(sys.stdin)])
@@ -99,11 +105,11 @@ def main():
 		sys.exit(0)
 
 	# Compute an uniform sampling of the input mesh
-	point_list = uniform_sample_mesh(triangle_list, 4 * 2048)
+	point_list = uniform_sample_mesh(triangle_list, 4 * args.sample_count)
 
 	# Compute a blue noise sampling of the input mesh, seeded by the previous sampling
 	mesh_surface_area = sum(triangle_surface_area(tri) for tri in triangle_list)
-	point_list = blue_noise_sample_elimination(point_list, mesh_surface_area, 2048)
+	point_list = blue_noise_sample_elimination(point_list, mesh_surface_area, args.sample_count)
 
 	# Display
 	fig = plot.figure()
