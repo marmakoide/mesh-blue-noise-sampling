@@ -12,14 +12,11 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 
-def norm2(X):
-	return numpy.sqrt(numpy.sum(X ** 2, axis = 0))
-
-
-
-def triangle_surface_area(triangle):
-	A, B, C = triangle
-	return .5 * norm2(numpy.cross(B - A, C - A))
+def mesh_area(triangle_list):
+	N = numpy.cross(triangle_list[:,1] - triangle_list[:,0], triangle_list[:,2] - triangle_list[:,0], axis = 1)
+	N_norm = numpy.sqrt(numpy.sum(N ** 2, axis = 1))
+	N_norm *= .5
+	return N_norm
 
 
 
@@ -38,10 +35,9 @@ def triangle_picking(triangle):
 
 
 
-def uniform_sample_mesh(triangle_list, sample_count):
-	# Compute area of each triangle, normalize the sum to 1
-	triangle_area = numpy.array([triangle_surface_area(tri) for tri in triangle_list])
-	triangle_area /= numpy.sum(triangle_area)
+def uniform_sample_mesh(triangle_list, triangle_area_list, sample_count):
+	# Normalize the sum of area of each triangle to 1
+	triangle_area = triangle_area_list / numpy.sum(triangle_area_list)
 
 	# For each sample
 	ret = numpy.zeros((sample_count, 3))
@@ -108,12 +104,14 @@ def main():
 		sys.stderr.write('%s\n' % e)
 		sys.exit(0)
 
+	# Compute surface area of each triangle
+	tri_area = mesh_area(triangle_list)
+
 	# Compute an uniform sampling of the input mesh
-	point_list = uniform_sample_mesh(triangle_list, 4 * args.sample_count)
+	point_list = uniform_sample_mesh(triangle_list, tri_area, 4 * args.sample_count)
 
 	# Compute a blue noise sampling of the input mesh, seeded by the previous sampling
-	mesh_surface_area = sum(triangle_surface_area(tri) for tri in triangle_list)
-	point_list = blue_noise_sample_elimination(point_list, mesh_surface_area, args.sample_count)
+	point_list = blue_noise_sample_elimination(point_list, numpy.sum(tri_area), args.sample_count)
 
 	# Display
 	fig = plot.figure()
