@@ -24,11 +24,14 @@ def triangle_surface_area(triangle):
 
 
 reflection = numpy.array([[0., -1.], [-1., 0.]])
+
 def triangle_picking(triangle):
+	# Pick uniformly a value in the [0, 1]x[0, 1] lower triangle
 	X = numpy.random.random(2)
 	if numpy.sum(X) > 1:
 		X = numpy.dot(X, reflection) + 1.
 
+	# Map the [0, 1]x[0, 1] lower triangle to the actual triangle
 	A, B, C = triangle
 	U, V = B - A, C - A
 	return numpy.dot(numpy.array([U, V]).T, X) + A
