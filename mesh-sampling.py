@@ -70,10 +70,7 @@ def blue_noise_sample_elimination(point_list, mesh_surface_area, sample_count):
 		W[i] = sum(D[i, j] for j in kdtree.query_ball_point(point_list[i], 2 * rmax) if i != j)
 
 	# Pick the samples we need
-	heap = []
-	for i, w in enumerate(W):
-		heap.append((w, i))
-	heap.sort()
+	heap = sorted((w, i) for i, w in enumerate(W))
 
 	id_set = set(range(point_list.shape[0]))
 	while len(id_set) > sample_count:
